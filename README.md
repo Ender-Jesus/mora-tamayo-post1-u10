@@ -58,3 +58,16 @@ Al ejecutar el benchmark secuencial, los datos arrojan tiempos de latencia muy b
 * **Tercer salto (L3 a RAM):** Finalmente, al superar los 4096KB (4MB, tamaño de la L3), ocurre un aumento significativo en la latencia. En este punto, los datos deben ser traídos directamente desde la memoria principal (RAM), demostrando que la penalización por un "cache miss" total es sustancial.
 
 A pesar de los saltos, el acceso secuencial se beneficia del "prefetching" del procesador (aprovechando la localidad espacial), lo que mantiene la latencia relativamente controlada en comparación con lo que sería un acceso aleatorio.
+
+## Pasos de Ejecución - Checkpoint 3 (Acceso Aleatorio)
+1. Se integró la función `bench_rand` en `cache_bench.c`, la cual utiliza un array de índices permutados aleatoriamente para forzar accesos no contiguos a la memoria.
+2. Se utilizó el algoritmo de Fisher-Yates para garantizar que el patrón de acceso sea impredecible para el hardware prefetcher del CPU.
+3. Se compararon los tiempos de ejecución entre el acceso secuencial y el aleatorio para los límites de L1, L2, L3 y RAM.
+
+## Análisis de Resultados - Secuencial vs Aleatorio
+[cite_start]Los resultados muestran una diferencia drástica de rendimiento[cite: 111]:
+* **Localidad Espacial:** En el acceso secuencial, el procesador puede predecir qué datos se necesitarán (prefetching) y traer líneas de caché completas, manteniendo la latencia baja incluso cerca de los límites de la caché.
+* **Impacto del Acceso Aleatorio:** Al acceder aleatoriamente, cada lectura tiene una alta probabilidad de ser un "cache miss". 
+* **TLB Miss:** Para arrays grandes (superiores a 1MB-2MB), se observa una penalización adicional. [cite_start]Esto se debe a los fallos en el Translation Lookaside Buffer (TLB), ya que el acceso aleatorio salta entre diferentes páginas de memoria virtual, obligando al sistema a realizar traducciones de direcciones más costosas[cite: 106].
+
+[cite_start]En conclusión, el acceso aleatorio destruye los beneficios de la jerarquía de memoria, resultando en latencias significativamente mayores que el acceso secuencial conforme el tamaño del conjunto de datos crece[cite: 82, 111].
